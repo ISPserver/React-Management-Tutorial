@@ -1,52 +1,57 @@
-import React from 'react';
+import React, { Component } from 'react';
+import Customer from './components/Customer'
 import './App.css';
-import Customer from './components/Customer';
 import Paper from '@material-ui/core/Paper';
 import Table from '@material-ui/core/Table';
 import TableHead from '@material-ui/core/TableHead';
 import TableBody from '@material-ui/core/TableBody';
 import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import { withStyles } from '@material-ui/core/styles';
-import { Tab } from '@material-ui/core';
+
 
 const styles = theme => ({
   root: {
     width: '100%',
-    marginTop: theme.spacing.unit * 3,
+    marginTop: theme.spacing(3),
     overflowX: "auto"
   },
   table: {
     minWidth: 1080
+  },
+  progress: {
+    margin: theme.spacing(2)
   }
 })
 
-const customers = [{
-  'id': 1,
-  'image': 'https://placeimg.com/64/64/1',
-  'name': '배성민',
-  'birthday': '961222',
-  'gender': '남자',
-  'job': '대학생' 
-},
-{
-  'id': 2,
-  'image': 'https://placeimg.com/64/64/2',
-  'name': '홍길동',
-  'birthday': '960305',
-  'gender': '남자',
-  'job': '프로그래머' 
-},
-{
-  'id': 3,
-  'name': '이순신',
-  'image': 'https://placeimg.com/64/64/3',
-  'birthday': '921205',
-  'gender': '남자',
-  'job': '디자이너'
-}];
 
-class App extends React.Component {
+class App extends Component {
+  
+    state = { //일반적으로 props는 변할 수 없는 값들을 정의
+              //state는 변할 수 있는 값들을 정의
+      customers:"",
+      completed: 0
+    }
+
+    componentDidMount() {    //componentDidMount를 사용해서
+      this.timer = setInterval(this.progress, 20);
+      this.callApi()        //Api서버를 요청
+        .then(res => this.setState({customers: res})) // 데이터받아와서 설정
+        .catch(err => console.log(err));
+    }
+    
+    callApi = async () => {   //비동기방식으로 요청
+      const response = await fetch('/api/customers'); // 데이터를 받아옴
+      const body = await response.json(); // json방식으로 body에 데이터를 담음
+      return body; // 데이터 반환 
+    }
+
+  progress = () => {
+    const { completed } = this.state;
+    this.setState({ completed: completed >= 100 ? 0 : completed +1}) 
+  }
+
   render() {
     const { classes } = this.props;
     return (
@@ -63,9 +68,16 @@ class App extends React.Component {
             </TableRow>
           </TableHead>
           <TableBody>
-          {customers.map(c => { return (
-              <Customer key={c.id} id={c.id} image={c.image} name={c.name}
-                birthday={c.birthday} gender={c.gender} job={c.job} />)})}
+          {this.state.customers ? this.state.customers.map(c => {
+             return ( <Customer key={c.id} id={c.id} image={c.image} name={c.name}
+                birthday={c.birthday} gender={c.gender} job={c.job}/>)})
+              : 
+              <TableRow>
+                <TableCell colSpan="6" align="center">
+                  <CircularProgress className={classes.progress} variant="determinate" value={this.state.completed}/>
+                </TableCell>
+              </TableRow>
+              }
           </TableBody>  
           </Table>
         </Paper>
