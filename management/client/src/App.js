@@ -29,10 +29,23 @@ const styles = theme => ({
 
 class App extends Component {
   
-    state = { //일반적으로 props는 변할 수 없는 값들을 정의
-              //state는 변할 수 있는 값들을 정의
-      customers:"",
-      completed: 0
+    constructor(props){//일반적으로 props는 변할 수 없는 값들을 정의  /// state는 변할 수 있는 값들을 정의
+      super(props);
+      this.state = {
+        customers: '',
+        completed: 0
+      }
+    }
+
+    // 변경부분만 재업로딩 하는 함수
+    stateRefresh = () => {
+      this.setState({
+        customers: '',
+        completed:0
+      });
+      this.callApi()        //Api서버를 요청
+        .then(res => this.setState({customers: res})) // 데이터받아와서 설정
+        .catch(err => console.log(err));
     }
 
     componentDidMount() {    //componentDidMount를 사용해서
@@ -88,7 +101,8 @@ class App extends Component {
             </TableBody>  
             </Table>
           </Paper>
-          <CustomerAdd/>
+          <CustomerAdd stateRefresh={this.stateRefresh}/>
+           {/* 변경부분만 업로드 함수 */}
         </div>
     ); 
   }
